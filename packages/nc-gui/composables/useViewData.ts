@@ -1,5 +1,5 @@
 import { UITypes, ViewTypes } from 'nocodb-sdk'
-import type { Api, ColumnType, FormType, GalleryType, PaginatedType, TableType, ViewType } from 'nocodb-sdk'
+import type { Api, ColumnType, FormColumnType, FormType, GalleryType, PaginatedType, TableType, ViewType } from 'nocodb-sdk'
 import type { ComputedRef, Ref } from 'vue'
 import {
   IsPublicInj,
@@ -54,7 +54,7 @@ export function useViewData(
 
   const galleryData = ref<GalleryType>()
 
-  const formColumnData = ref<FormType>()
+  const formColumnData = ref<Record<string, any>[]>()
 
   const formViewData = ref<FormType>()
 
@@ -189,14 +189,21 @@ export function useViewData(
       : await fetchSharedViewData({ sortsArr: sorts.value, filtersArr: nestedFilters.value })
     formattedData.value = formatData(response.list)
     paginationData.value = response.pageInfo
+
+    // to cater the case like when querying with a non-zero offset
+    // the result page may point to the target page where the actual returned data don't display on
+    const expectedPage = Math.max(1, Math.ceil(paginationData.value.totalRows! / paginationData.value.pageSize!))
+    if (expectedPage < paginationData.value.page!) {
+      await changePage(expectedPage)
+    }
+
     if (viewMeta.value?.type === ViewTypes.GRID) {
       await loadAggCommentsCount()
     }
   }
 
   async function loadGalleryData() {
-    if (!viewMeta?.value?.id) return
-
+    if (!viewMeta?.value?.id || isPublic.value) return
     galleryData.value = await $api.dbView.galleryRead(viewMeta.value.id)
   }
 
@@ -257,7 +264,7 @@ export function useViewData(
         project?.value.id as string,
         metaValue?.id as string,
         viewMetaValue?.id as string,
-        id,
+        encodeURIComponent(id),
         {
           // if value is undefined treat it as null
           [property]: toUpdate.row[property] ?? null,
@@ -268,7 +275,7 @@ export function useViewData(
         // }
       )
       // audit
-      $api.utils.auditRowUpdate(id, {
+      $api.utils.auditRowUpdate(encodeURIComponent(id), {
         fk_model_id: metaValue?.id as string,
         column_name: property,
         row_id: id,
@@ -282,7 +289,14 @@ export function useViewData(
       Object.assign(
         toUpdate.row,
         metaValue!.columns!.reduce<Record<string, any>>((acc: Record<string, any>, col: ColumnType) => {
-          if (col.uidt === UITypes.Formula || col.uidt === UITypes.Rollup || col.au || col.cdf?.includes(' on update '))
+          if (
+            col.uidt === UITypes.Formula ||
+            col.uidt === UITypes.QrCode ||
+            col.uidt === UITypes.Barcode ||
+            col.uidt === UITypes.Rollup ||
+            col.au ||
+            col.cdf?.includes(' on update ')
+          )
             acc[col.title!] = updatedRowData[col.title!]
           return acc
         }, {} as Record<string, any>),
@@ -405,14 +419,14 @@ export function useViewData(
   async function loadFormView() {
     if (!viewMeta?.value?.id) return
     try {
-      const { columns, ...view } = (await $api.dbView.formRead(viewMeta.value.id)) as Record<string, any>
+      const { columns, ...view } = await $api.dbView.formRead(viewMeta.value.id)
 
-      const fieldById = columns.reduce(
+      const fieldById = (columns || []).reduce(
         (o: Record<string, any>, f: Record<string, any>) => ({
           ...o,
           [f.fk_column_id]: f,
         }),
-        {},
+        {} as Record<string, FormColumnType>,
       )
 
       let order = 1

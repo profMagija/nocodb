@@ -7,6 +7,8 @@ import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers'
 import monacoEditorPlugin from 'vite-plugin-monaco-editor'
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
 
+import PurgeIcons from 'vite-plugin-purge-icons'
+
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
   modules: ['@vueuse/nuxt', 'nuxt-windicss', '@nuxt/image-edge'],
@@ -14,14 +16,18 @@ export default defineNuxtConfig({
   ssr: false,
 
   app: {
-    pageTransition: {
-      name: 'page',
-      mode: 'out-in',
-    },
-    layoutTransition: {
-      name: 'layout',
-      mode: 'out-in',
-    },
+    pageTransition: process.env.NUXT_PAGE_TRANSITION_DISABLE
+      ? false
+      : {
+          name: 'page',
+          mode: 'out-in',
+        },
+    layoutTransition: process.env.NUXT_PAGE_TRANSITION_DISABLE
+      ? false
+      : {
+          name: 'layout',
+          mode: 'out-in',
+        },
 
     /** In production build we need to load assets using relative path, to achieve the result we are using cdnURL */
     cdnURL: process.env.NODE_ENV === 'production' ? '.' : undefined,
@@ -34,6 +40,12 @@ export default defineNuxtConfig({
     '~/assets/css/global.css',
     '~/assets/style.scss',
   ],
+
+  runtimeConfig: {
+    public: {
+      ncBackendUrl: '',
+    },
+  },
 
   meta: {
     title: 'NocoDB',
@@ -119,19 +131,27 @@ export default defineNuxtConfig({
               'ph',
               'ri',
               'system-uicons',
+              'vscode-icons',
+              'simple-icons',
             ],
           }),
         ],
       }),
       monacoEditorPlugin({
         languageWorkers: ['json'],
+        customDistPath: (root: string, buildOutDir: string) => {
+          return `${buildOutDir}/` + `monacoeditorwork`
+        },
+      }),
+      PurgeIcons({
+        /* PurgeIcons Options */
+        includedCollections: ['emojione'],
       }),
     ],
     define: {
       'process.env.DEBUG': 'false',
       'process.nextTick': () => {},
       'process.env.ANT_MESSAGE_DURATION': process.env.ANT_MESSAGE_DURATION,
-      'process.env.NC_BACKEND_URL': process.env.NC_BACKEND_URL,
     },
     server: {
       watch: {

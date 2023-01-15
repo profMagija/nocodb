@@ -16,7 +16,7 @@
     "cancel": "Abbrechen",
     "submit": "Übertragen",
     "create": "Erstellen",
-    "duplicate": "Duplicate",
+    "duplicate": "Duplizieren",
     "insert": "Einfügen",
     "delete": "Löschen",
     "update": "Aktualisieren",
@@ -69,7 +69,12 @@
     "betaNote": "Diese Funktion befindet sich derzeit in der Beta.",
     "moreInfo": "Mehr Informationen können hier gefunden werden",
     "logs": "Protokolle",
-    "groupingField": "Grouping Field"
+    "groupingField": "Gruppierungsfeld",
+    "insertAfter": "danach einfügen",
+    "insertBefore": "davor einfügen",
+    "hideField": "Feld ausblenden",
+    "sortAsc": "Aufsteigend sortieren",
+    "sortDesc": "Absteigend sortieren"
   },
   "objects": {
     "project": "Projekt",
@@ -104,7 +109,9 @@
       "creator": "Ersteller",
       "editor": "Bearbeiter",
       "commenter": "Kommentator",
-      "viewer": "Zuschauer"
+      "viewer": "Zuschauer",
+      "orgLevelCreator": "Organization Level Creator",
+      "orgLevelViewer": "Organization Level Viewer"
     },
     "sqlVIew": "SQL Ansicht"
   },
@@ -197,9 +204,11 @@
     "quickImportFrom": "Schnell importieren von",
     "quickImport": "Schnell Importieren",
     "advancedSettings": "Erweiterte Einstellungen",
-    "codeSnippet": "Code Ausschnitt"
+    "codeSnippet": "Code Ausschnitt",
+    "keyboardShortcut": "Tastenkürzel"
   },
   "labels": {
+    "createdBy": "Erstellt von",
     "notifyVia": "Benachrichtigen mit",
     "projName": "Projektname",
     "tableName": "Tabellenname",
@@ -238,6 +247,11 @@
     "created": "Erstellt",
     "sqlOutput": "SQL-Ausgabe",
     "addOption": "Option hinzufügen",
+    "qrCodeValueColumn": "Spalte mit QR-Code",
+    "barcodeValueColumn": "Column with Barcode value",
+    "barcodeFormat": "Barcode format",
+    "qrCodeValueTooLong": "Zu viele Zeichen für einen QR-Code",
+    "barcodeValueTooLong": "Too many characters for a barcode",
     "aggregateFunction": "Globale Funktion",
     "dbCreateIfNotExists": "Datenbank: Erstellen, falls nicht vorhanden",
     "clientKey": "Client-Schlüssel",
@@ -263,6 +277,7 @@
     "selectUserRole": "Benutzerrolle auswählen",
     "childTable": "Child-Tabelle",
     "childColumn": "Child-Spalte",
+    "linkToAnotherRecord": "Link to another record",
     "onUpdate": "Update",
     "onDelete": "Löschen",
     "account": "Benutzerkonto",
@@ -280,23 +295,24 @@
     "importAttachmentColumns": "Import Attachment Columns",
     "importFormulaColumns": "Import Formula Columns",
     "noData": "Keine Daten",
-    "goToDashboard": "Go to Dashboard",
-    "importing": "Importing",
+    "goToDashboard": "Zum Dashboard gehen",
+    "importing": "Wird importiert",
     "flattenNested": "Flatten Nested",
     "downloadAllowed": "Download erlaubt",
     "weAreHiring": "Wir stellen ein!",
     "primaryKey": "Primärschlüssel",
     "hasMany": "hat viele",
     "belongsTo": "gehört zu",
-    "manyToMany": "have many to many relation",
-    "extraConnectionParameters": "Extra connection parameters",
+    "manyToMany": "haben M:N-Beziehnungen",
+    "extraConnectionParameters": "Zusätzliche Verbindungsparameter",
     "commentsOnly": "Nur Kommentare",
     "documentation": "Dokumentation",
     "subscribeNewsletter": "Abonnieren Sie unseren wöchentlichen Newsletter",
-    "signUpWithProvider": "Sign up with {provider}",
-    "signInWithProvider": "Sign in with {provider}",
+    "signUpWithProvider": "Mit {provider} anmelden",
+    "signInWithProvider": "Mit {provider} einloggen",
     "agreeToTos": "Mit Ihrer Anmeldung stimmen Sie den allgemeinen Nutzungsbedingungen zu",
-    "welcomeToNc": "Willkommen bei NocoDB!"
+    "welcomeToNc": "Willkommen bei NocoDB!",
+    "inviteOnlySignup": "Anmeldung nur über Einladungs-URL zulassen"
   },
   "activity": {
     "createProject": "Projekt erstellen",
@@ -341,12 +357,14 @@
     "invite": "Einladen",
     "inviteMore": "Mehr einladen",
     "inviteTeam": "Team einladen",
+    "inviteUser": "Benutzer einladen",
     "inviteToken": "Token einladen",
     "newUser": "Neuer Benutzer",
     "editUser": "Benutzer bearbeiten",
     "deleteUser": "Benutzer vom Projekt entfernen",
     "resendInvite": "Einladungs-Email erneut versenden",
     "copyInviteURL": "Einladungs-URL kopieren",
+    "copyPasswordResetURL": "Copy password reset URL",
     "newRole": "Neue Rolle",
     "reloadRoles": "Rollen neu laden",
     "nextPage": "Nächste Seite",
@@ -362,6 +380,8 @@
     "setPrimary": "Als Primärwert festlegen",
     "addRow": "Neue Zeile hinzufügen",
     "saveRow": "Zeile speichern",
+    "saveAndExit": "Speichern & Verlassen",
+    "saveAndStay": "Speichern & Bleiben",
     "insertRow": "Neue Zeile einfügen",
     "deleteRow": "Zeile löschen",
     "deleteSelectedRow": "Ausgewählte Zeilen löschen",
@@ -405,9 +425,9 @@
     "editConnJson": "Verbindung JSON bearbeiten",
     "sponsorUs": "Sponsor uns",
     "sendEmail": "E-MAIL SENDEN",
-    "addUserToProject": "Add user to project",
-    "getApiSnippet": "Get API Snippet",
-    "clearCell": "Clear cell",
+    "addUserToProject": "Benutzer zum Projekt hinzufügen",
+    "getApiSnippet": "zeige API Snippet",
+    "clearCell": "Zelle leeren",
     "addFilterGroup": "Add Filter Group",
     "linkRecord": "Link record",
     "addNewRecord": "Add new record",
@@ -476,10 +496,24 @@
     "defaultValue": "Standardwert",
     "filterByEmail": "Filtern nach E-Mail",
     "filterQuery": "Filter-Abfrage",
-    "selectField": "Select field"
+    "selectField": "Feld wählen"
   },
   "msg": {
+    "warning": {
+      "barcode": {
+        "renderError": "Barcode error - please check compatibility between input and barcode type"
+      },
+      "nonEditableFields": {
+        "computedFieldUnableToClear": "Warning: Computed field - unable to clear text",
+        "qrFieldsCannotBeDirectlyChanged": "Warning: QR fields cannot be directly changed."
+      }
+    },
     "info": {
+      "pasteNotSupported": "Paste operation is not supported on the active cell",
+      "roles": {
+        "orgCreator": "Creator can create new projects and access any invited project.",
+        "orgViewer": "Viewer is not allowed to create new projects but they can access any invited project."
+      },
       "footerInfo": "Zeilen pro Seite",
       "upload": "Datei zum Hochladen auswählen",
       "upload_sub": "oder Drag & Drop Datei",
@@ -593,7 +627,9 @@
       "deleteViewConfirmation": "Sind Sie sicher, dass Sie diese Ansicht löschen möchten?",
       "deleteTableConfirmation": "Möchten Sie die Tabelle löschen",
       "showM2mTables": "M2M Tabellen anzeigen",
-      "deleteKanbanStackConfirmation": "Deleting this stack will also remove the select option `{stackToBeDeleted}` from the `{groupingField}`. The records will move to the uncategorized stack."
+      "deleteKanbanStackConfirmation": "Deleting this stack will also remove the select option `{stackToBeDeleted}` from the `{groupingField}`. The records will move to the uncategorized stack.",
+      "computedFieldEditWarning": "Computed field: contents are read-only. Use column edit menu to reconfigure",
+      "computedFieldDeleteWarning": "Computed field: contents are read-only. Unable to clear content."
     },
     "error": {
       "searchProject": "Ihre Suche nach {search} fand keine Ergebnisse",
@@ -639,13 +675,13 @@
       "rowUpdateFailed": "Row update failed",
       "deleteRowFailed": "Fehler beim Löschen der Zeile",
       "setFormDataFailed": "Failed to set form data",
-      "formViewUpdateFailed": "Failed to update form view",
-      "tableNameRequired": "Table name is required",
-      "nameShouldStartWithAnAlphabetOr_": "Name should start with an alphabet or _",
-      "followingCharactersAreNotAllowed": "Following characters are not allowed",
-      "columnNameRequired": "Column name is required",
+      "formViewUpdateFailed": "Fehler beim Aktualisieren der Formularansicht",
+      "tableNameRequired": "Tabellenname ist erforderlich",
+      "nameShouldStartWithAnAlphabetOr_": "Name muss mit einem Buchstaben oder _ beginnen",
+      "followingCharactersAreNotAllowed": "Folgende Zeichen sind nicht erlaubt",
+      "columnNameRequired": "Spaltenname ist erforderlich",
       "projectNameExceeds50Characters": "Projektname überschreitet 50 Zeichen",
-      "projectNameCannotStartWithSpace": "Project name cannot start with space",
+      "projectNameCannotStartWithSpace": "Projektname darf nicht mit einem Leerzeichen beginnen",
       "requiredField": "Pflichtfeld",
       "ipNotAllowed": "IP nicht erlaubt",
       "targetFileIsNotAnAcceptedFileType": "Target file is not an accepted file type",
@@ -653,7 +689,9 @@
       "theAcceptedFileTypesAreXlsXlsxXlsmOdsOts": "Die akzeptierten Dateitypen sind .xls, .xlsx, .xlsm, .ods, .ots",
       "parameterKeyCannotBeEmpty": "Parameter key cannot be empty",
       "duplicateParameterKeysAreNotAllowed": "Duplicate parameter keys are not allowed",
-      "fieldRequired": "{value} cannot be empty."
+      "fieldRequired": "{value} cannot be empty.",
+      "projectNotAccessible": "Project not accessible",
+      "copyToClipboardError": "Failed to copy to clipboard"
     },
     "toast": {
       "exportMetadata": "Projektmetadaten erfolgreich exportiert",
@@ -673,6 +711,7 @@
       "futureRelease": "Kommt bald!"
     },
     "success": {
+      "columnDuplicated": "Column duplicated successfully",
       "updatedUIACL": "Updated UI ACL for tables successfully",
       "pluginUninstalled": "Plugin erfolgreich deinstalliert",
       "pluginSettingsSaved": "Plugin-Einstellungen erfolgreich gespeichert",
@@ -683,13 +722,16 @@
       "tableDataExported": "Successfully exported all table data",
       "updated": "Successfully updated",
       "sharedViewDeleted": "Deleted shared view successfully",
+      "userDeleted": "User deleted successfully",
       "viewRenamed": "Ansicht erfolgreich umbenannt",
       "tokenGenerated": "Token erfolgreich generiert",
       "tokenDeleted": "Token erfolgreich gelöscht",
       "userAddedToProject": "Benutzer erfolgreich zum Projekt hinzugefügt",
+      "userAdded": "Successfully added user",
       "userDeletedFromProject": "Benutzer erfolgreich aus dem Projekt gelöscht",
       "inviteEmailSent": "Einladungs-E-Mail erfolgreich gesendet",
       "inviteURLCopied": "Einladungslink wurde in Zwischenablage kopiert",
+      "passwordResetURLCopied": "Password reset URL copied to clipboard",
       "shareableURLCopied": "Copied shareable base URL to clipboard!",
       "embeddableHTMLCodeCopied": "Copied embeddable HTML code!",
       "userDetailsUpdated": "Benutzerdaten erfolgreich aktualisiert",
@@ -699,7 +741,9 @@
       "webhookTested": "Webhook tested successfully",
       "columnUpdated": "Spalte aktualisiert",
       "columnCreated": "Spalte erstellt",
-      "passwordChanged": "Kennwort erfolgreich geändert. Bitte melden Sie sich erneut an."
+      "passwordChanged": "Kennwort erfolgreich geändert. Bitte melden Sie sich erneut an.",
+      "settingsSaved": "Settings saved successfully",
+      "roleUpdated": "Role updated successfully"
     }
   }
 }

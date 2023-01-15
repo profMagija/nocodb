@@ -2,13 +2,44 @@
 import { Request, Response, Router } from 'express';
 import multer from 'multer';
 import { nanoid } from 'nanoid';
-import { Tele } from 'nc-help';
+import { OrgUserRoles, ProjectRoles } from 'nocodb-sdk';
 import path from 'path';
 import slash from 'slash';
+import Noco from '../../Noco';
+import { MetaTable } from '../../utils/globals';
 import mimetypes, { mimeIcons } from '../../utils/mimeTypes';
-import ncMetaAclMw from '../helpers/ncMetaAclMw';
-import catchError from '../helpers/catchError';
+import { Tele } from 'nc-help';
+import extractProjectIdAndAuthenticate from '../helpers/extractProjectIdAndAuthenticate';
+import catchError, { NcError } from '../helpers/catchError';
 import NcPluginMgrv2 from '../helpers/NcPluginMgrv2';
+import { NC_ATTACHMENT_FIELD_SIZE } from '../../constants';
+
+const isUploadAllowed = async (req: Request, _res: Response, next: any) => {
+  if (!req['user']?.id) {
+    NcError.unauthorized('Unauthorized');
+  }
+
+  try {
+    // check user is super admin or creator
+    if (
+      req['user'].roles?.includes(OrgUserRoles.SUPER_ADMIN) ||
+      req['user'].roles?.includes(OrgUserRoles.CREATOR) ||
+      // if viewer then check at-least one project have editor or higher role
+      // todo: cache
+      !!(await Noco.ncMeta
+        .knex(MetaTable.PROJECT_USERS)
+        .where(function () {
+          this.where('roles', ProjectRoles.OWNER);
+          this.orWhere('roles', ProjectRoles.CREATOR);
+          this.orWhere('roles', ProjectRoles.EDITOR);
+        })
+        .andWhere('fk_user_id', req['user'].id)
+        .first())
+    )
+      return next();
+  } catch {}
+  NcError.badRequest('Upload not allowed');
+};
 
 // const storageAdapter = new Local();
 export async function upload(req: Request, res: Response) {
@@ -151,12 +182,24 @@ router.post(
   '/api/v1/db/storage/upload',
   multer({
     storage: multer.diskStorage({}),
+    limits: {
+      fieldSize: NC_ATTACHMENT_FIELD_SIZE,
+    },
   }).any(),
-  ncMetaAclMw(upload, 'upload')
+  [
+    extractProjectIdAndAuthenticate,
+    catchError(isUploadAllowed),
+    catchError(upload),
+  ]
 );
 router.post(
   '/api/v1/db/storage/upload-by-url',
-  ncMetaAclMw(uploadViaURL, 'uploadViaURL')
+
+  [
+    extractProjectIdAndAuthenticate,
+    catchError(isUploadAllowed),
+    catchError(uploadViaURL),
+  ]
 );
 router.get(/^\/download\/(.+)$/, catchError(fileRead));
 

@@ -26,6 +26,7 @@ export interface AppInfo {
   teleEnabled: boolean
   type: string
   version: string
+  ee?: boolean
 }
 
 export interface StoredState {

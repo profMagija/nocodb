@@ -3,8 +3,8 @@ import Model from '../../models/Model';
 import ProjectMgrv2 from '../../db/sql-mgr/v2/ProjectMgrv2';
 import Base from '../../models/Base';
 import Column from '../../models/Column';
-import validateParams from '../helpers/validateParams';
 import { Tele } from 'nc-help';
+import validateParams from '../helpers/validateParams';
 
 import { customAlphabet } from 'nanoid';
 import LinkToAnotherRecordColumn from '../../models/LinkToAnotherRecordColumn';
@@ -15,9 +15,13 @@ import {
 import {
   AuditOperationSubTypes,
   AuditOperationTypes,
+  ColumnReqType,
   isVirtualCol,
+  LinkToAnotherColumnReqType,
   LinkToAnotherRecordType,
+  LookupColumnReqType,
   RelationTypes,
+  RollupColumnReqType,
   substituteColumnAliasWithIdInFormula,
   substituteColumnIdWithAliasInFormula,
   TableType,
@@ -36,6 +40,7 @@ import { metaApiMetrics } from '../helpers/apiMetrics';
 import FormulaColumn from '../../models/FormulaColumn';
 import KanbanView from '../../models/KanbanView';
 import { MetaTable } from '../../utils/globals';
+import formulaQueryBuilderv2 from '../../db/sql-data-mapper/lib/sql/formulav2/formulaQueryBuilderv2';
 
 const randomID = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz_', 10);
 
@@ -96,7 +101,10 @@ async function createHmAndBtColumn(
   }
 }
 
-export async function columnAdd(req: Request, res: Response<TableType>) {
+export async function columnAdd(
+  req: Request<any, any, ColumnReqType & { uidt: UITypes }>,
+  res: Response<TableType>
+) {
   const table = await Model.getWithInfo({
     id: req.params.tableId,
   });
@@ -121,7 +129,7 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
     NcError.badRequest('Duplicate column alias');
   }
 
-  let colBody = req.body;
+  let colBody: any = req.body;
   switch (colBody.uidt) {
     case UITypes.Rollup:
       {
@@ -137,7 +145,7 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
 
         const relation = await (
           await Column.get({
-            colId: req.body.fk_relation_column_id,
+            colId: (req.body as RollupColumnReqType).fk_relation_column_id,
           })
         ).getColOptions<LinkToAnotherRecordType>();
 
@@ -163,7 +171,8 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
         const relatedTable = await relatedColumn.getModel();
         if (
           !(await relatedTable.getColumns()).find(
-            (c) => c.id === req.body.fk_rollup_column_id
+            (c) =>
+              c.id === (req.body as RollupColumnReqType).fk_rollup_column_id
           )
         )
           throw new Error('Rollup column not found in related table');
@@ -183,7 +192,7 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
 
         const relation = await (
           await Column.get({
-            colId: req.body.fk_relation_column_id,
+            colId: (req.body as LookupColumnReqType).fk_relation_column_id,
           })
         ).getColOptions<LinkToAnotherRecordType>();
 
@@ -209,7 +218,8 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
         const relatedTable = await relatedColumn.getModel();
         if (
           !(await relatedTable.getColumns()).find(
-            (c) => c.id === req.body.fk_lookup_column_id
+            (c) =>
+              c.id === (req.body as LookupColumnReqType).fk_lookup_column_id
           )
         )
           throw new Error('Lookup column not found in related table');
@@ -227,14 +237,21 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
         validateParams(['parentId', 'childId', 'type'], req.body);
 
         // get parent and child models
-        const parent = await Model.getWithInfo({ id: req.body.parentId });
-        const child = await Model.getWithInfo({ id: req.body.childId });
+        const parent = await Model.getWithInfo({
+          id: (req.body as LinkToAnotherColumnReqType).parentId,
+        });
+        const child = await Model.getWithInfo({
+          id: (req.body as LinkToAnotherColumnReqType).childId,
+        });
         let childColumn: Column;
 
         const sqlMgr = await ProjectMgrv2.getSqlMgr({
           id: base.project_id,
         });
-        if (req.body.type === 'hm' || req.body.type === 'bt') {
+        if (
+          (req.body as LinkToAnotherColumnReqType).type === 'hm' ||
+          (req.body as LinkToAnotherColumnReqType).type === 'bt'
+        ) {
           // populate fk column name
           const fkColName = getUniqueColumnName(
             await child.getColumns(),
@@ -285,7 +302,7 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
             childColumn = await Column.get({ colId: id });
 
             // ignore relation creation if virtual
-            if (!req.body.virtual) {
+            if (!(req.body as LinkToAnotherColumnReqType).virtual) {
               // create relation
               await sqlMgr.sqlOpPlus(base, 'relationCreate', {
                 childColumn: fkColName,
@@ -315,11 +332,11 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
             child,
             parent,
             childColumn,
-            req.body.type,
-            req.body.title,
-            req.body.virtual
+            (req.body as LinkToAnotherColumnReqType).type as RelationTypes,
+            (req.body as LinkToAnotherColumnReqType).title,
+            (req.body as LinkToAnotherColumnReqType).virtual
           );
-        } else if (req.body.type === 'mm') {
+        } else if ((req.body as LinkToAnotherColumnReqType).type === 'mm') {
           const aTn = `${project?.prefix ?? ''}_nc_m2m_${randomID()}`;
           const aTnAlias = aTn;
 
@@ -378,7 +395,7 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
             columns: associateTableCols,
           });
 
-          if (!req.body.virtual) {
+          if (!(req.body as LinkToAnotherColumnReqType).virtual) {
             const rel1Args = {
               ...req.body,
               childTable: aTn,
@@ -412,7 +429,7 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
             childCol,
             null,
             null,
-            req.body.virtual,
+            (req.body as LinkToAnotherColumnReqType).virtual,
             true
           );
           await createHmAndBtColumn(
@@ -421,7 +438,7 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
             parentCol,
             null,
             null,
-            req.body.virtual,
+            (req.body as LinkToAnotherColumnReqType).virtual,
             true
           );
 
@@ -490,11 +507,33 @@ export async function columnAdd(req: Request, res: Response<TableType>) {
       Tele.emit('evt', { evt_type: 'relation:created' });
       break;
 
+    case UITypes.QrCode:
+      await Column.insert({
+        ...colBody,
+        fk_model_id: table.id,
+      });
+      break;
+    case UITypes.Barcode:
+      await Column.insert({
+        ...colBody,
+        fk_model_id: table.id,
+      });
+      break;
     case UITypes.Formula:
       colBody.formula = await substituteColumnAliasWithIdInFormula(
         colBody.formula_raw || colBody.formula,
         table.columns
       );
+
+      try {
+        // test the query to see if it is valid in db level
+        const dbDriver = NcConnectionMgrv2.get(base);
+        await formulaQueryBuilderv2(colBody.formula, null, dbDriver, table);
+      } catch (e) {
+        console.error(e);
+        NcError.badRequest('Invalid Formula');
+      }
+
       await Column.insert({
         ...colBody,
         fk_model_id: table.id,
@@ -715,15 +754,32 @@ export async function columnUpdate(req: Request, res: Response<TableType>) {
       UITypes.Rollup,
       UITypes.LinkToAnotherRecord,
       UITypes.Formula,
+      UITypes.QrCode,
+      UITypes.Barcode,
       UITypes.ForeignKey,
     ].includes(column.uidt)
   ) {
     if (column.uidt === colBody.uidt) {
-      if (column.uidt === UITypes.Formula) {
+      if ([UITypes.QrCode, UITypes.Barcode].includes(column.uidt)) {
+        await Column.update(column.id, {
+          ...column,
+          ...colBody,
+        });
+      } else if (column.uidt === UITypes.Formula) {
         colBody.formula = await substituteColumnAliasWithIdInFormula(
           colBody.formula_raw || colBody.formula,
           table.columns
         );
+
+        try {
+          // test the query to see if it is valid in db level
+          const dbDriver = NcConnectionMgrv2.get(base);
+          await formulaQueryBuilderv2(colBody.formula, null, dbDriver, table);
+        } catch (e) {
+          console.error(e);
+          NcError.badRequest('Invalid Formula');
+        }
+
         await Column.update(column.id, {
           // title: colBody.title,
           ...column,
@@ -745,6 +801,8 @@ export async function columnUpdate(req: Request, res: Response<TableType>) {
       UITypes.Rollup,
       UITypes.LinkToAnotherRecord,
       UITypes.Formula,
+      UITypes.QrCode,
+      UITypes.Barcode,
       UITypes.ForeignKey,
     ].includes(colBody.uidt)
   ) {
@@ -1430,6 +1488,8 @@ export async function columnDelete(req: Request, res: Response<TableType>) {
   switch (column.uidt) {
     case UITypes.Lookup:
     case UITypes.Rollup:
+    case UITypes.QrCode:
+    case UITypes.Barcode:
     case UITypes.Formula:
       await Column.delete(req.params.columnId);
       break;

@@ -1,13 +1,17 @@
 import { Request, Response } from 'express';
 import { TableType, validatePassword } from 'nocodb-sdk';
+import { OrgUserRoles } from 'nocodb-sdk';
+import { NC_APP_SETTINGS } from '../../../constants';
+import Store from '../../../models/Store';
+import { Tele } from 'nc-help';
 import catchError, { NcError } from '../../helpers/catchError';
+
 const { isEmail } = require('validator');
 import * as ejs from 'ejs';
 
 import bcrypt from 'bcryptjs';
 import { promisify } from 'util';
 import User from '../../../models/User';
-import { Tele } from 'nc-help';
 
 const { v4: uuidv4 } = require('uuid');
 import Audit from '../../../models/Audit';
@@ -20,6 +24,58 @@ import { MetaTable } from '../../../utils/globals';
 import Noco from '../../../Noco';
 import { genJwt } from './helpers';
 import { randomTokenString } from '../../helpers/stringHelpers';
+
+export async function registerNewUserIfAllowed({
+  firstname,
+  lastname,
+  email,
+  salt,
+  password,
+  email_verification_token,
+}: {
+  firstname;
+  lastname;
+  email: string;
+  salt: any;
+  password;
+  email_verification_token;
+}) {
+  let roles: string = OrgUserRoles.CREATOR;
+
+  if (await User.isFirst()) {
+    roles = `${OrgUserRoles.CREATOR},${OrgUserRoles.SUPER_ADMIN}`;
+    // todo: update in nc_store
+    // roles = 'owner,creator,editor'
+    Tele.emit('evt', {
+      evt_type: 'project:invite',
+      count: 1,
+    });
+  } else {
+    let settings: { invite_only_signup?: boolean } = {};
+    try {
+      settings = JSON.parse((await Store.get(NC_APP_SETTINGS))?.value);
+    } catch {}
+
+    if (settings?.invite_only_signup) {
+      NcError.badRequest('Not allowed to signup, contact super admin.');
+    } else {
+      roles = OrgUserRoles.VIEWER;
+    }
+  }
+
+  const token_version = randomTokenString();
+
+  return await User.insert({
+    firstname,
+    lastname,
+    email,
+    salt,
+    password,
+    email_verification_token,
+    roles,
+    token_version,
+  });
+}
 
 export async function signup(req: Request, res: Response<TableType>) {
   const {
@@ -84,35 +140,13 @@ export async function signup(req: Request, res: Response<TableType>) {
       NcError.badRequest('User already exist');
     }
   } else {
-    let roles = 'user';
-
-    if (await User.isFirst()) {
-      roles = 'user,super';
-      // todo: update in nc_store
-      // roles = 'owner,creator,editor'
-      Tele.emit('evt', {
-        evt_type: 'project:invite',
-        count: 1,
-      });
-    } else {
-      if (process.env.NC_INVITE_ONLY_SIGNUP) {
-        NcError.badRequest('Not allowed to signup, contact super admin.');
-      } else {
-        roles = 'user_new';
-      }
-    }
-
-    const token_version = randomTokenString();
-
-    await User.insert({
+    await registerNewUserIfAllowed({
       firstname,
       lastname,
       email,
       salt,
       password,
       email_verification_token,
-      roles,
-      token_version,
     });
   }
   user = await User.getByEmail(email);

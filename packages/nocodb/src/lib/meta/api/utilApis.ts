@@ -1,12 +1,13 @@
 // // Project CRUD
 import { Request, Response } from 'express';
+import { compareVersions, validate } from 'compare-versions';
 
-import { packageVersion } from 'nc-help';
 import { ViewTypes } from 'nocodb-sdk';
 import Project from '../../models/Project';
 import Noco from '../../Noco';
 import NcConnectionMgrv2 from '../../utils/common/NcConnectionMgrv2';
 import { MetaTable } from '../../utils/globals';
+import { packageVersion } from '../../utils/packageVersion';
 import ncMetaAclMw from '../helpers/ncMetaAclMw';
 import SqlMgrv2 from '../../db/sql-mgr/v2/SqlMgrv2';
 import NcConfigFactory, {
@@ -63,6 +64,7 @@ export async function appInfo(req: Request, res: Response) {
     ncMin: !!process.env.NC_MIN,
     teleEnabled: !process.env.NC_DISABLE_TELE,
     ncSiteUrl: (req as any).ncSiteUrl,
+    ee: Noco.isEE(),
   };
 
   res.json(result);
@@ -74,17 +76,22 @@ export async function versionInfo(_req: Request, res: Response) {
     (versionCache.lastFetched &&
       versionCache.lastFetched < Date.now() - 1000 * 60 * 60)
   ) {
-    versionCache.releaseVersion = await axios
-      .get('https://github.com/nocodb/nocodb/releases/latest', {
+    const nonBetaTags = await axios
+      .get('https://api.github.com/repos/nocodb/nocodb/tags', {
         timeout: 5000,
       })
-      .then((response) =>
-        response.request.res.responseUrl.replace(
-          'https://github.com/nocodb/nocodb/releases/tag/',
-          ''
-        )
-      )
+      .then((response) => {
+        return response.data
+          .map((x) => x.name)
+          .filter(
+            (v) => validate(v) && !v.includes('finn') && !v.includes('beta')
+          )
+          .sort((x, y) => compareVersions(y, x));
+      })
       .catch(() => null);
+    if (nonBetaTags && nonBetaTags.length > 0) {
+      versionCache.releaseVersion = nonBetaTags[0];
+    }
     versionCache.lastFetched = Date.now();
   }
 

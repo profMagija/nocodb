@@ -1,7 +1,10 @@
 import { Request, Response } from 'express';
+import { OrgUserRoles, ProjectType } from 'nocodb-sdk';
 import Project from '../../models/Project';
 import { ModelTypes, ProjectListType, UITypes } from 'nocodb-sdk';
 import DOMPurify from 'isomorphic-dompurify';
+import { packageVersion } from '../../utils/packageVersion';
+import { Tele } from 'nc-help';
 import { PagedResponseImpl } from '../helpers/PagedResponse';
 import syncMigration from '../helpers/syncMigration';
 import { IGNORE_TABLES } from '../../utils/common/BaseApiBuilder';
@@ -17,7 +20,6 @@ import ProjectUser from '../../models/ProjectUser';
 import { customAlphabet } from 'nanoid';
 import Noco from '../../Noco';
 import isDocker from 'is-docker';
-import { packageVersion, Tele } from 'nc-help';
 import { NcError } from '../helpers/catchError';
 import getColumnUiType from '../helpers/getColumnUiType';
 import mapDefaultPrimaryValue from '../helpers/mapDefaultPrimaryValue';
@@ -70,16 +72,18 @@ export async function projectUpdate(
 }
 
 export async function projectList(
-  req: Request<any, any, any>,
+  req: Request<any> & { user: { id: string; roles: string } },
   res: Response<ProjectListType>,
   next
 ) {
   try {
-    const projects = await Project.list(req.query);
+    const projects = req.user?.roles?.includes(OrgUserRoles.SUPER_ADMIN)
+      ? await Project.list(req.query)
+      : await ProjectUser.getProjectsList(req.user.id, req.query);
 
     res // todo: pagination
       .json(
-        new PagedResponseImpl(projects, {
+        new PagedResponseImpl(projects as ProjectType[], {
           count: projects.length,
           limit: projects.length,
         })
@@ -91,7 +95,7 @@ export async function projectList(
 }
 
 export async function projectDelete(
-  req: Request<any, any, any>,
+  req: Request<any>,
   res: Response<ProjectListType>
 ) {
   const result = await Project.softDelete(req.params.projectId);
@@ -134,7 +138,6 @@ async function projectCreate(req: Request<any, any>, res) {
               connection: {
                 filename: `${toolDir}/nc_minimal_dbs/${projectTitle}_${dbId}.db`,
               },
-              useNullAsDefault: true,
             },
           },
           inflection_column: 'camelize',
@@ -448,15 +451,12 @@ async function populateMeta(base: Base, project: Project): Promise<any> {
   return info;
 }
 
-export async function projectInfoGet(req, res) {
-  const project = await Project.getWithInfo(req.params.projectId);
+export async function projectInfoGet(_req, res) {
   res.json({
     Node: process.version,
     Arch: process.arch,
     Platform: process.platform,
     Docker: isDocker(),
-    Database: project.bases?.[0]?.type,
-    ProjectOnRootDB: !!project?.is_meta,
     RootDB: Noco.getConfig()?.meta?.db?.client,
     PackageVersion: packageVersion,
   });
@@ -465,22 +465,25 @@ export async function projectInfoGet(req, res) {
 export async function projectCost(req, res) {
   let cost = 0;
   const project = await Project.getWithInfo(req.params.projectId);
-  const sqlClient = NcConnectionMgrv2.getSqlClient(project.bases[0]);
-  const userCount = await ProjectUser.getUsersCount(req.query);
-  const recordCount = (await sqlClient.totalRecords())?.data.TotalRecords;
 
-  if (recordCount > 100000) {
-    // 36,000 or $79/user/month
-    cost = Math.max(36000, 948 * userCount);
-  } else if (recordCount > 50000) {
-    // $36,000 or $50/user/month
-    cost = Math.max(36000, 600 * userCount);
-  } else if (recordCount > 10000) {
-    // $240/user/yr
-    cost = Math.min(240 * userCount, 36000);
-  } else if (recordCount > 1000) {
-    // $120/user/yr
-    cost = Math.min(120 * userCount, 36000);
+  for (const base of project.bases) {
+    const sqlClient = NcConnectionMgrv2.getSqlClient(base);
+    const userCount = await ProjectUser.getUsersCount(req.query);
+    const recordCount = (await sqlClient.totalRecords())?.data.TotalRecords;
+
+    if (recordCount > 100000) {
+      // 36,000 or $79/user/month
+      cost = Math.max(36000, 948 * userCount);
+    } else if (recordCount > 50000) {
+      // $36,000 or $50/user/month
+      cost = Math.max(36000, 600 * userCount);
+    } else if (recordCount > 10000) {
+      // $240/user/yr
+      cost = Math.min(240 * userCount, 36000);
+    } else if (recordCount > 1000) {
+      // $120/user/yr
+      cost = Math.min(120 * userCount, 36000);
+    }
   }
 
   Tele.event({

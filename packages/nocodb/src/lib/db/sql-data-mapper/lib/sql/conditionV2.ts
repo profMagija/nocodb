@@ -246,7 +246,7 @@ const parseConditionV2 = async (
       const model = await column.getModel();
       const formula = await column.getColOptions<FormulaColumn>();
       const builder = (
-        await formulaQueryBuilderv2(formula.formula, null, knex, model)
+        await formulaQueryBuilderv2(formula.formula, null, knex, model, column)
       ).builder;
       return parseConditionV2(
         new Filter({ ...filter, value: knex.raw('?', [filter.value]) } as any),
@@ -285,7 +285,7 @@ const parseConditionV2 = async (
               [field, val] = [val, field];
               val = `%${val}%`.replace(/^%'([\s\S]*)'%$/, '%$1%');
             } else {
-              val = `%${val}%`;
+              val = val.startsWith('%') || val.endsWith('%') ? val : `%${val}%`;
             }
             if (qb?.client?.config?.client === 'pg') {
               qb = qb.whereRaw('??::text ilike ?', [field, val]);
@@ -298,7 +298,7 @@ const parseConditionV2 = async (
               [field, val] = [val, field];
               val = `%${val}%`.replace(/^%'([\s\S]*)'%$/, '%$1%');
             } else {
-              val = `%${val}%`;
+              val = val.startsWith('%') || val.endsWith('%') ? val : `%${val}%`;
             }
             qb = qb.whereNot(
               field,

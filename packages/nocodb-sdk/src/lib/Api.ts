@@ -16,7 +16,6 @@ export interface UserType {
   lastname: string;
   /** @format email */
   email: string;
-  /** @format email */
   roles?: string;
   /**
    * @format date
@@ -85,6 +84,8 @@ export interface BaseType {
   updated_at?: any;
   inflection_column?: string;
   inflection_table?: string;
+  order?: number;
+  enabled?: boolean;
 }
 
 export interface BaseReqType {
@@ -107,8 +108,8 @@ export interface BaseListType {
 
 export interface TableType {
   id?: string;
-  fk_project_id?: string;
-  fk_base_id?: string;
+  project_id?: string;
+  base_id?: string;
   table_name: string;
   title: string;
   type?: string;
@@ -122,8 +123,8 @@ export interface TableType {
   columns?: ColumnType[];
   columnsById?: object;
   slug?: string;
-  project_id?: string;
   mm?: boolean | number;
+  meta?: any;
 }
 
 export interface ViewType {
@@ -134,6 +135,7 @@ export interface ViewType {
   fk_model_id?: string;
   slug?: string;
   uuid?: string;
+  meta?: any;
   show_system_fields?: boolean;
   lock_type?: 'collaborative' | 'locked' | 'personal';
   type?: number;
@@ -175,6 +177,7 @@ export interface TableReqType {
   order?: number;
   mm?: boolean;
   columns: ColumnType[];
+  meta?: any;
 }
 
 export interface TableListType {
@@ -545,6 +548,9 @@ export interface ApiTokenType {
   id?: string;
   token?: string;
   description?: string;
+  fk_user_id?: string;
+  created_at?: any;
+  updated_at?: any;
 }
 
 export interface HookLogType {
@@ -569,91 +575,109 @@ export interface HookLogType {
   updated_at?: string;
 }
 
-export type ColumnReqType =
-  | {
-      uidt?:
-        | 'ID'
-        | 'SingleLineText'
-        | 'LongText'
-        | 'Attachment'
-        | 'Checkbox'
-        | 'MultiSelect'
-        | 'SingleSelect'
-        | 'Collaborator'
-        | 'Date'
-        | 'Year'
-        | 'Time'
-        | 'PhoneNumber'
-        | 'Email'
-        | 'URL'
-        | 'Number'
-        | 'Decimal'
-        | 'Currency'
-        | 'Percent'
-        | 'Duration'
-        | 'Rating'
-        | 'Count'
-        | 'DateTime'
-        | 'CreateTime'
-        | 'LastModifiedTime'
-        | 'AutoNumber'
-        | 'Geometry'
-        | 'JSON'
-        | 'SpecificDBType'
-        | 'Barcode'
-        | 'Button';
-      id?: string;
-      base_id?: string;
-      fk_model_id?: string;
-      title?: string;
-      dt?: string;
-      np?: string;
-      ns?: string;
-      clen?: string | number;
-      cop?: string;
-      pk?: boolean;
-      pv?: boolean;
-      rqd?: boolean;
-      column_name?: string;
-      un?: boolean;
-      ct?: string;
-      ai?: boolean;
-      unique?: boolean;
-      cdf?: string;
-      cc?: string;
-      csn?: string;
-      dtx?: string;
-      dtxp?: string;
-      dtxs?: string;
-      au?: boolean;
-      ''?: string;
-    }
-  | {
-      uidt: 'LinkToAnotherRecord';
-      title: string;
-      parentId: string;
-      childId: string;
-      type: 'hm' | 'bt' | 'mm';
-    }
-  | {
-      uidt?: 'Rollup';
-      title?: string;
-      fk_relation_column_id?: string;
-      fk_rollup_column_id?: string;
-      rollup_function?: string;
-    }
-  | {
-      uidt?: 'Lookup';
-      title?: string;
-      fk_relation_column_id?: string;
-      fk_lookup_column_id?: string;
-    }
-  | {
-      uidt?: string;
-      formula_raw?: string;
-      formula?: string;
-      title?: string;
-    };
+export interface NormalColumnRequestType {
+  uidt?:
+    | 'ID'
+    | 'SingleLineText'
+    | 'LongText'
+    | 'Attachment'
+    | 'Checkbox'
+    | 'MultiSelect'
+    | 'SingleSelect'
+    | 'Collaborator'
+    | 'Date'
+    | 'Year'
+    | 'Time'
+    | 'PhoneNumber'
+    | 'Email'
+    | 'URL'
+    | 'Number'
+    | 'Decimal'
+    | 'Currency'
+    | 'Percent'
+    | 'Duration'
+    | 'Rating'
+    | 'Count'
+    | 'DateTime'
+    | 'CreateTime'
+    | 'LastModifiedTime'
+    | 'AutoNumber'
+    | 'Geometry'
+    | 'JSON'
+    | 'SpecificDBType'
+    | 'Barcode'
+    | 'Button';
+  id?: string;
+  base_id?: string;
+  fk_model_id?: string;
+  title?: string;
+  dt?: string;
+  np?: string;
+  ns?: string;
+  clen?: string | number;
+  cop?: string;
+  pk?: boolean;
+  pv?: boolean;
+  rqd?: boolean;
+  column_name?: string;
+  un?: boolean;
+  ct?: string;
+  ai?: boolean;
+  unique?: boolean;
+  cdf?: string;
+  cc?: string;
+  csn?: string;
+  dtx?: string;
+  dtxp?: string;
+  dtxs?: string;
+  au?: boolean;
+}
+
+export interface LinkToAnotherColumnReqType {
+  uidt: 'LinkToAnotherRecord';
+  title: string;
+  virtual?: boolean;
+  parentId: string;
+  childId: string;
+  type: 'hm' | 'bt' | 'mm';
+}
+
+export interface RollupColumnReqType {
+  uidt?: 'Rollup';
+  title?: string;
+  fk_relation_column_id?: string;
+  fk_rollup_column_id?: string;
+  rollup_function?: string;
+}
+
+export interface LookupColumnReqType {
+  uidt?: 'Lookup';
+  title?: string;
+  fk_relation_column_id?: string;
+  fk_lookup_column_id?: string;
+}
+
+export interface FormulaColumnReqType {
+  uidt?: string;
+  formula_raw?: string;
+  formula?: string;
+  title?: string;
+}
+
+export type ColumnReqType = (
+  | NormalColumnRequestType
+  | LinkToAnotherColumnReqType
+  | RollupColumnReqType
+  | FormulaColumnReqType
+  | LookupColumnReqType
+) & {
+  column_name?: string;
+  title?: string;
+  column_order?: {
+    view_id?: string;
+    order?: number;
+  };
+};
 
 export interface UserInfoType {
   id?: string;
@@ -1189,6 +1213,303 @@ export class Api<
         ...params,
       }),
   };
+  orgTokens = {
+    /**
+ * No description
+ * 
+ * @tags Org tokens
+ * @name List
+ * @summary Organisation API Tokens List
+ * @request GET:/api/v1/tokens
+ * @response `200` `{
+  users?: {
+  list: ((ApiTokenType & {
+  created_by?: string,
+
+}))[],
+  pageInfo: PaginatedType,
+
+},
+
+}` OK
+ */
+    list: (params: RequestParams = {}) =>
+      this.request<
+        {
+          users?: {
+            list: (ApiTokenType & {
+              created_by?: string;
+            })[];
+            pageInfo: PaginatedType;
+          };
+        },
+        any
+      >({
+        path: `/api/v1/tokens`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Org tokens
+     * @name Create
+     * @request POST:/api/v1/tokens
+     * @response `200` `void` OK
+     */
+    create: (data: ApiTokenType, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/v1/tokens`,
+        method: 'POST',
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Org tokens
+     * @name Delete
+     * @request DELETE:/api/v1/tokens/{token}
+     * @response `200` `void` OK
+     */
+    delete: (token: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/v1/tokens/${token}`,
+        method: 'DELETE',
+        ...params,
+      }),
+  };
+  orgLicense = {
+    /**
+ * No description
+ * 
+ * @tags Org license
+ * @name Get
+ * @summary App license get
+ * @request GET:/api/v1/license
+ * @response `200` `{
+  key?: string,
+
+}` OK
+ */
+    get: (params: RequestParams = {}) =>
+      this.request<
+        {
+          key?: string;
+        },
+        any
+      >({
+        path: `/api/v1/license`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Org license
+     * @name Set
+     * @summary App license get
+     * @request POST:/api/v1/license
+     * @response `200` `void` OK
+     */
+    set: (
+      data: {
+        key?: string;
+      },
+      params: RequestParams = {}
+    ) =>
+      this.request<void, any>({
+        path: `/api/v1/license`,
+        method: 'POST',
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+  };
+  orgAppSettings = {
+    /**
+ * No description
+ * 
+ * @tags Org app settings
+ * @name Get
+ * @summary App settings get
+ * @request GET:/api/v1/app-settings
+ * @response `200` `{
+  invite_only_signup?: boolean,
+
+}` OK
+ */
+    get: (params: RequestParams = {}) =>
+      this.request<
+        {
+          invite_only_signup?: boolean;
+        },
+        any
+      >({
+        path: `/api/v1/app-settings`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Org app settings
+     * @name Set
+     * @summary App app settings get
+     * @request POST:/api/v1/app-settings
+     * @response `200` `void` OK
+     */
+    set: (
+      data: {
+        invite_only_signup?: boolean;
+      },
+      params: RequestParams = {}
+    ) =>
+      this.request<void, any>({
+        path: `/api/v1/app-settings`,
+        method: 'POST',
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+  };
+  orgUsers = {
+    /**
+ * No description
+ * 
+ * @tags Org users
+ * @name List
+ * @summary Organisation Users
+ * @request GET:/api/v1/users
+ * @response `200` `{
+  users?: {
+  list: (UserType)[],
+  pageInfo: PaginatedType,
+
+},
+
+}` OK
+ */
+    list: (params: RequestParams = {}) =>
+      this.request<
+        {
+          users?: {
+            list: UserType[];
+            pageInfo: PaginatedType;
+          };
+        },
+        any
+      >({
+        path: `/api/v1/users`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Org users
+     * @name Add
+     * @summary Organisation User Add
+     * @request POST:/api/v1/users
+     * @response `200` `any` OK
+     */
+    add: (data: UserType, params: RequestParams = {}) =>
+      this.request<any, any>({
+        path: `/api/v1/users`,
+        method: 'POST',
+        body: data,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Org users
+     * @name Update
+     * @summary Organisation User Update
+     * @request PATCH:/api/v1/users/{userId}
+     * @response `200` `void` OK
+     */
+    update: (userId: string, data: UserType, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/v1/users/${userId}`,
+        method: 'PATCH',
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Org users
+     * @name Delete
+     * @summary Organisation User Delete
+     * @request DELETE:/api/v1/users/{userId}
+     * @response `200` `void` OK
+     */
+    delete: (userId: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/v1/users/${userId}`,
+        method: 'DELETE',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Org users
+     * @name ResendInvite
+     * @summary Organisation User Invite
+     * @request POST:/api/v1/users/{userId}/resend-invite
+     * @response `200` `void` OK
+     */
+    resendInvite: (userId: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/v1/users/${userId}/resend-invite`,
+        method: 'POST',
+        ...params,
+      }),
+
+    /**
+ * No description
+ * 
+ * @tags Org users
+ * @name GeneratePasswordResetToken
+ * @summary Organisation User Generate Password Reset Token
+ * @request POST:/api/v1/users/{userId}/generate-reset-url
+ * @response `200` `{
+  reset_password_token?: string,
+  reset_password_url?: string,
+
+}` OK
+ */
+    generatePasswordResetToken: (userId: string, params: RequestParams = {}) =>
+      this.request<
+        {
+          reset_password_token?: string;
+          reset_password_url?: string;
+        },
+        any
+      >({
+        path: `/api/v1/users/${userId}/generate-reset-url`,
+        method: 'POST',
+        format: 'json',
+        ...params,
+      }),
+  };
   project = {
     /**
  * No description
@@ -1575,6 +1896,194 @@ export class Api<
         ...params,
       }),
   };
+  base = {
+    /**
+     * @description Read project base details
+     *
+     * @tags Base
+     * @name Read
+     * @summary Base read
+     * @request GET:/api/v1/db/meta/projects/{projectId}/bases/{baseId}
+     * @response `200` `object` OK
+     */
+    read: (projectId: string, baseId: string, params: RequestParams = {}) =>
+      this.request<object, any>({
+        path: `/api/v1/db/meta/projects/${projectId}/bases/${baseId}`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Base
+     * @name Delete
+     * @summary Base delete
+     * @request DELETE:/api/v1/db/meta/projects/{projectId}/bases/{baseId}
+     * @response `200` `void` OK
+     */
+    delete: (projectId: string, baseId: string, params: RequestParams = {}) =>
+      this.request<void, any>({
+        path: `/api/v1/db/meta/projects/${projectId}/bases/${baseId}`,
+        method: 'DELETE',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Base
+     * @name Update
+     * @summary Base update
+     * @request PATCH:/api/v1/db/meta/projects/{projectId}/bases/{baseId}
+     * @response `200` `void` OK
+     */
+    update: (
+      projectId: string,
+      baseId: string,
+      data: any,
+      params: RequestParams = {}
+    ) =>
+      this.request<void, any>({
+        path: `/api/v1/db/meta/projects/${projectId}/bases/${baseId}`,
+        method: 'PATCH',
+        body: data,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * @description Get project base list
+     *
+     * @tags Base
+     * @name List
+     * @summary Base list
+     * @request GET:/api/v1/db/meta/projects/{projectId}/bases/
+     * @response `200` `object` OK
+     */
+    list: (projectId: string, params: RequestParams = {}) =>
+      this.request<object, any>({
+        path: `/api/v1/db/meta/projects/${projectId}/bases/`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Base
+     * @name Create
+     * @summary Base create
+     * @request POST:/api/v1/db/meta/projects/{projectId}/bases/
+     * @response `200` `BaseType` OK
+     */
+    create: (
+      projectId: string,
+      data: BaseType & {
+        external?: boolean;
+      },
+      params: RequestParams = {}
+    ) =>
+      this.request<BaseType, any>({
+        path: `/api/v1/db/meta/projects/${projectId}/bases/`,
+        method: 'POST',
+        body: data,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Base
+     * @name TableList
+     * @request GET:/api/v1/db/meta/projects/{projectId}/{baseId}/tables
+     * @response `200` `TableListType`
+     */
+    tableList: (
+      projectId: string,
+      baseId: string,
+      query?: {
+        page?: number;
+        pageSize?: number;
+        sort?: string;
+        includeM2M?: boolean;
+      },
+      params: RequestParams = {}
+    ) =>
+      this.request<TableListType, any>({
+        path: `/api/v1/db/meta/projects/${projectId}/${baseId}/tables`,
+        method: 'GET',
+        query: query,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Base
+     * @name TableCreate
+     * @request POST:/api/v1/db/meta/projects/{projectId}/{baseId}/tables
+     * @response `200` `TableType` OK
+     */
+    tableCreate: (
+      projectId: string,
+      baseId: string,
+      data: TableReqType,
+      params: RequestParams = {}
+    ) =>
+      this.request<TableType, any>({
+        path: `/api/v1/db/meta/projects/${projectId}/${baseId}/tables`,
+        method: 'POST',
+        body: data,
+        type: ContentType.Json,
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Base
+     * @name MetaDiffSync
+     * @request POST:/api/v1/db/meta/projects/{projectId}/meta-diff/{baseId}
+     * @response `200` `any` OK
+     */
+    metaDiffSync: (
+      projectId: string,
+      baseId: string,
+      params: RequestParams = {}
+    ) =>
+      this.request<any, any>({
+        path: `/api/v1/db/meta/projects/${projectId}/meta-diff/${baseId}`,
+        method: 'POST',
+        format: 'json',
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Base
+     * @name MetaDiffGet
+     * @request GET:/api/v1/db/meta/projects/{projectId}/meta-diff/{baseId}
+     * @response `200` `any` OK
+     */
+    metaDiffGet: (
+      projectId: string,
+      baseId: string,
+      params: RequestParams = {}
+    ) =>
+      this.request<any, any>({
+        path: `/api/v1/db/meta/projects/${projectId}/meta-diff/${baseId}`,
+        method: 'GET',
+        format: 'json',
+        ...params,
+      }),
+  };
   dbTable = {
     /**
      * No description
@@ -1651,7 +2160,9 @@ export class Api<
       tableId: string,
       data: {
         table_name?: string;
+        title?: string;
         project_id?: string;
+        meta?: any;
       },
       params: RequestParams = {}
     ) =>
@@ -1806,6 +2317,7 @@ export class Api<
       viewId: string,
       data: {
         order?: number;
+        meta?: any;
         title?: string;
         show_system_fields?: boolean;
         lock_type?: 'collaborative' | 'locked' | 'personal';
@@ -2300,7 +2812,13 @@ export class Api<
      * @request POST:/api/v1/db/meta/views/{viewId}/sorts
      * @response `200` `void` OK
      */
-    create: (viewId: string, data: SortType, params: RequestParams = {}) =>
+    create: (
+      viewId: string,
+      data: SortType & {
+        push_to_top?: boolean;
+      },
+      params: RequestParams = {}
+    ) =>
       this.request<void, any>({
         path: `/api/v1/db/meta/views/${viewId}/sorts`,
         method: 'POST',
@@ -3486,6 +4004,7 @@ export class Api<
  * @response `200` `(ViewType & {
   relatedMetas?: any,
   client?: string,
+  base_id?: string,
   columns?: ((GridColumnType | FormColumnType | GalleryColumnType) & ColumnType),
   model?: TableType,
 
@@ -3499,6 +4018,7 @@ export class Api<
         ViewType & {
           relatedMetas?: any;
           client?: string;
+          base_id?: string;
           columns?: (GridColumnType | FormColumnType | GalleryColumnType) &
             ColumnType;
           model?: TableType;
@@ -3572,7 +4092,7 @@ export class Api<
      */
     commentCount: (
       query: {
-        ids: any[];
+        ids: any;
         fk_model_id: string;
       },
       params: RequestParams = {}

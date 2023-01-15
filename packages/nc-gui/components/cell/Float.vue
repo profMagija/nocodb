@@ -16,7 +16,18 @@ const emits = defineEmits<Emits>()
 
 const editEnabled = inject(EditModeInj)
 
-const vModel = useVModel(props, 'modelValue', emits)
+const _vModel = useVModel(props, 'modelValue', emits)
+
+const vModel = computed({
+  get: () => _vModel.value,
+  set: (value: string) => {
+    if (value === '') {
+      _vModel.value = null
+    } else {
+      _vModel.value = value
+    }
+  },
+})
 
 const focus: VNodeRef = (el) => (el as HTMLInputElement)?.focus()
 </script>
@@ -30,6 +41,13 @@ const focus: VNodeRef = (el) => (el as HTMLInputElement)?.focus()
     type="number"
     step="0.1"
     @blur="editEnabled = false"
+    @keydown.down.stop
+    @keydown.left.stop
+    @keydown.right.stop
+    @keydown.up.stop
+    @keydown.delete.stop
+    @selectstart.capture.stop
+    @mousedown.stop
   />
   <span v-else class="text-sm">{{ vModel }}</span>
 </template>

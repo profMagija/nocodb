@@ -53,12 +53,13 @@ export default {
           <div class="flex justify-center items-center">
             <div class="flex items-center gap-2 ml-3 text-white">
               <template v-if="isLoading">
-                <span class="text-white" data-nc="nc-loading">{{ $t('general.loading') }}</span>
+                <span class="text-white" data-testid="nc-loading">{{ $t('general.loading') }}</span>
 
                 <MdiReload :class="{ 'animate-infinite animate-spin ': isLoading }" />
               </template>
 
-              <div v-else class="text-xl font-semibold truncate text-white nc-shared-view-title">
+              <div v-else class="text-xl font-semibold truncate text-white nc-shared-view-title flex gap-2 items-center">
+                <GeneralViewIcon v-if="sharedView" class="!text-xl" :meta="sharedView" />
                 {{ sharedView?.title }}
               </div>
             </div>

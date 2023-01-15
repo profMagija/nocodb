@@ -34,19 +34,6 @@ Verwandelt jeden MySQL, PostgreSQL, SQL Server, SQLite & MariaDB in eine Smart-T
 
 # Schneller Versuch
 
-### 1-Klick-Bereitstellung
-
-#### Heroku
-
-<a href="https://heroku.com/deploy?template=https://github.com/nocodb/nocodb-seed-heroku">
-    <img 
-    src="https://www.herokucdn.com/deploy/button.svg" 
-    width="300px"
-    alt="Deploy NocoDB to Heroku with 1-Click" 
-    />
-</a>
-<br>
-
 ### Verwenden von Docker
 
 ```bash
@@ -235,30 +222,6 @@ npm run dev
 Änderungen am Code starten automatisch neu.
 
 > nocodb/packages/nocodb enthält nc-lib-gui, die entwickelte Version von nc-gui, die in der npm-Registry gehostet wird. Sie können localhost:8000/dashboard im Browser aufrufen, nachdem Sie das Backend lokal gestartet haben, wenn Sie nur das Backend ändern möchten.
-
-
-## Cypress-Tests lokal ausführen
-
-```shell
-# install dependencies (cypress)
-npm install
-
-# MySQL-Datenbank mit der benötigten Datenbank mit Docker Compose ausführen
-docker-compose -f ./scripts/cypress/docker-compose-cypress.yml up
-
-# Backend API mit folgendem Befehl ausführen
-npm run start:api
-
-# Frontend Web-UI mit folgendem Befehl ausführen
-npm run start:web
-
-# Warten, bis die beiden Ports 3000 und 8000 verfügbar sind,
-# dann Cypress Test mit diesem Befehl ausführen
-npm run cypress:run
-
-# Oder diesen Befehl ausführen, um die GUI auszuführen
-npm run cypress:open
-```
 
 # Beiträge
 

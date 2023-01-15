@@ -124,8 +124,10 @@ async function getDataList(model, view: View, req) {
     );
     count = await baseModel.count(listArgs);
   } catch (e) {
-    // show empty result instead of throwing error here
-    // e.g. search some text in a numeric field
+    console.log(e);
+    NcError.internalServerError(
+      'Internal Server Error, check server log for more details'
+    );
   }
 
   return new PagedResponseImpl(data, {
@@ -270,7 +272,8 @@ async function getGroupedDataList(model, view: View, req) {
     data = data.map((item) => {
       // todo: use map to avoid loop
       const count =
-        countArr.find((countItem: any) => countItem.key === item.key)?.count ?? 0;
+        countArr.find((countItem: any) => countItem.key === item.key)?.count ??
+        0;
 
       item.value = new PagedResponseImpl(item.value, {
         ...req.query,
@@ -280,8 +283,9 @@ async function getGroupedDataList(model, view: View, req) {
     });
   } catch (e) {
     console.log(e);
-    // show empty result instead of throwing error here
-    // e.g. search some text in a numeric field
+    NcError.internalServerError(
+      'Internal Server Error, check server log for more details'
+    );
   }
   return data;
 }

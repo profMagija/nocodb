@@ -16,7 +16,18 @@ const emits = defineEmits<Emits>()
 
 const editEnabled = inject(EditModeInj)
 
-const vModel = useVModel(props, 'modelValue', emits)
+const _vModel = useVModel(props, 'modelValue', emits)
+
+const vModel = computed({
+  get: () => _vModel.value,
+  set: (value: string) => {
+    if (value === '') {
+      _vModel.value = null
+    } else {
+      _vModel.value = value
+    }
+  },
+})
 
 const focus: VNodeRef = (el) => (el as HTMLInputElement)?.focus()
 
@@ -34,6 +45,13 @@ function onKeyDown(evt: KeyboardEvent) {
     type="number"
     @blur="editEnabled = false"
     @keydown="onKeyDown"
+    @keydown.down.stop
+    @keydown.left.stop
+    @keydown.right.stop
+    @keydown.up.stop
+    @keydown.delete.stop
+    @selectstart.capture.stop
+    @mousedown.stop
   />
   <span v-else class="text-sm">{{ vModel }}</span>
 </template>

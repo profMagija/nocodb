@@ -14,7 +14,18 @@ const column = inject(ColumnInj)!
 
 const editEnabled = inject(EditModeInj)!
 
-const vModel = useVModel(props, 'modelValue', emit)
+const _vModel = useVModel(props, 'modelValue', emit)
+
+const vModel = computed({
+  get: () => _vModel.value,
+  set: (value: unknown) => {
+    if (value === '') {
+      _vModel.value = null
+    } else {
+      _vModel.value = value as number
+    }
+  },
+})
 
 const lastSaved = ref()
 
@@ -61,6 +72,13 @@ onMounted(() => {
     v-model="vModel"
     class="w-full h-full border-none outline-none px-2"
     @blur="submitCurrency"
+    @keydown.down.stop
+    @keydown.left.stop
+    @keydown.right.stop
+    @keydown.up.stop
+    @keydown.delete.stop
+    @selectstart.capture.stop
+    @mousedown.stop
   />
 
   <span v-else-if="vModel">{{ currency }}</span>
